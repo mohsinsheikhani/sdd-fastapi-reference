@@ -1,0 +1,531 @@
+openapi: 3.1.0
+info:
+  title: Task CRUD API
+  description: |
+    Task management endpoints for the Task Management API.
+    Provides CRUD operations with filtering, sorting, and pagination.
+    All endpoints require authentication via JWT access token.
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: tasks
+    description: Task management operations
+
+paths:
+  /tasks:
+    post:
+      operationId: create_task
+      summary: Create a new task
+      description: |
+        Create a new task for the authenticated user.
+        Title is required; other fields have sensible defaults.
+        Rate limited to 10 requests per minute per user.
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+            examples:
+              full:
+                summary: Task with all fields
+                value:
+                  title: Buy groceries
+                  description: Milk, eggs, bread
+                  priority: high
+                  due_date: "2026-01-25T17:00:00Z"
+              minimal:
+                summary: Task with only title
+                value:
+                  title: Call mom
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+        '401':
+          description: Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty_title:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Title cannot be empty or whitespace-only
+                title_too_long:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Title must be at most 70 characters
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: RATE_LIMIT_EXCEEDED
+                message: Too many requests. Please try again later.
+
+    get:
+      operationId: list_tasks
+      summary: List tasks with filtering and pagination
+      description: |
+        Retrieve a paginated list of the authenticated user's tasks.
+        Supports filtering by status, priority, and due date range.
+        Supports sorting by created_at, updated_at, due_date, priority, or status.
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number (1-indexed)
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Number of items per page
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+          description: Filter by task status
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+          description: Filter by task priority
+        - name: due_date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks with due_date >= this value
+        - name: due_date_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter tasks with due_date <= this value
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [created_at, updated_at, due_date, priority, status]
+            default: created_at
+          description: Field to sort by
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+      responses:
+        '200':
+          description: Paginated list of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskResponse'
+        '401':
+          description: Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_sort:
+                  value:
+                    code: INVALID_SORT_FIELD
+                    message: "Invalid sort field. Allowed: created_at, due_date, priority, status, updated_at"
+                invalid_date_range:
+                  value:
+                    code: INVALID_DATE_RANGE
+                    message: due_date_from must be before due_date_to
+
+  /tasks/{task_id}:
+    get:
+      operationId: get_task
+      summary: Get a single task
+      description: |
+        Retrieve a task by ID. Returns 404 for tasks that don't exist
+        or belong to another user (prevents enumeration).
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Task ID
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+        '401':
+          description: Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: TASK_NOT_FOUND
+                message: Task not found
+
+    patch:
+      operationId: update_task
+      summary: Update a task
+      description: |
+        Update one or more fields of a task using PATCH semantics.
+        Only provided fields are updated.
+        Status transitions from completed or cancelled are not allowed.
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Task ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+            examples:
+              status_change:
+                summary: Mark as completed
+                value:
+                  status: completed
+              priority_change:
+                summary: Change priority
+                value:
+                  priority: urgent
+              multiple_fields:
+                summary: Update multiple fields
+                value:
+                  title: Updated title
+                  description: Updated description
+                  due_date: "2026-01-30T12:00:00Z"
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRead'
+        '401':
+          description: Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation or business rule error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_transition:
+                  value:
+                    code: INVALID_STATUS_TRANSITION
+                    message: "Cannot change status from 'completed' - task is in terminal state"
+                no_fields:
+                  value:
+                    code: NO_FIELDS_TO_UPDATE
+                    message: No fields provided for update
+                empty_title:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Title cannot be empty or whitespace-only
+
+    delete:
+      operationId: delete_task
+      summary: Delete a task
+      description: |
+        Permanently delete a task. This action cannot be undone.
+        Returns 404 for tasks that don't exist or belong to another user.
+      tags:
+        - tasks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Task ID
+      responses:
+        '204':
+          description: Task deleted successfully
+        '401':
+          description: Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: TASK_NOT_FOUND
+                message: Task not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token from /auth/login
+
+  schemas:
+    TaskStatus:
+      type: string
+      enum:
+        - pending
+        - in_progress
+        - completed
+        - cancelled
+      description: |
+        Task status. Completed and cancelled are terminal states
+        that cannot transition to other states.
+
+    TaskPriority:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+        - urgent
+      description: |
+        Task priority level.
+        When sorting by priority descending: urgent > high > medium > low
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: Task title (cannot be whitespace-only)
+          example: Buy groceries
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional task description
+          example: Milk, eggs, bread
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+          default: medium
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Optional due date (past dates allowed)
+          example: "2026-01-25T17:00:00Z"
+
+    TaskUpdate:
+      type: object
+      description: |
+        All fields are optional. At least one field must be provided.
+        Status transitions from completed or cancelled are not allowed.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 70
+          description: Task title (cannot be whitespace-only)
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Task description (null to clear)
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date (null to clear)
+
+    TaskRead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique task identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          description: Task title
+          example: Buy groceries
+        description:
+          type: string
+          nullable: true
+          description: Task description
+          example: Milk, eggs, bread
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Due date (UTC)
+          example: "2026-01-25T17:00:00Z"
+        is_overdue:
+          type: boolean
+          description: |
+            Computed field. True if due_date is in the past and
+            status is not completed or cancelled.
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp (UTC)
+          example: "2026-01-22T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp (UTC)
+          example: "2026-01-22T12:00:00Z"
+
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items across all pages
+          example: 150
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page
+          example: 50
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 3
+
+    PaginatedTaskResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRead'
+          description: Array of tasks for this page
+        total:
+          type: integer
+          description: Total number of items across all pages
+        page:
+          type: integer
+          description: Current page number
+        page_size:
+          type: integer
+          description: Items per page
+        total_pages:
+          type: integer
+          description: Total number of pages
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - VALIDATION_ERROR
+            - TASK_NOT_FOUND
+            - INVALID_STATUS_TRANSITION
+            - NO_FIELDS_TO_UPDATE
+            - INVALID_SORT_FIELD
+            - INVALID_DATE_RANGE
+            - RATE_LIMIT_EXCEEDED
+            - AUTH_TOKEN_INVALID
+            - AUTH_TOKEN_EXPIRED
+          example: TASK_NOT_FOUND
+        message:
+          type: string
+          description: Human-readable error message
+          example: Task not found
