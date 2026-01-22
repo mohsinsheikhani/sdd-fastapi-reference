@@ -208,3 +208,11 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.12+ (using `|` union syntax for type hints) + FastAPI, SQLModel, Pydantic v2, python-jose (JWT), argon2-cffi, uvicorn (001-user-auth)
+- PostgreSQL (Neon-compatible), SQLModel ORM (001-user-auth)
+- Python 3.12+ (using `|` union syntax for type hints) + FastAPI, SQLModel, Pydantic v2 (inherits from 001-user-auth) (002-task-crud)
+
+## Recent Changes
+- 001-user-auth: Added Python 3.12+ (using `|` union syntax for type hints) + FastAPI, SQLModel, Pydantic v2, python-jose (JWT), argon2-cffi, uvicorn

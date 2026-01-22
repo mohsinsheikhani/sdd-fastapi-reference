@@ -1,0 +1,496 @@
+openapi: 3.1.0
+info:
+  title: User Authentication API
+  description: |
+    User authentication endpoints for the Task Management API.
+    Provides registration, login, token management, password reset, and account deletion.
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: users
+    description: User registration and account management
+  - name: auth
+    description: Authentication and token management
+
+paths:
+  /users:
+    post:
+      operationId: register_user
+      summary: Register new user
+      description: |
+        Create a new user account with name, email, and password.
+        Email is normalized to lowercase and must be unique.
+        Registration does NOT automatically authenticate the user.
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+            examples:
+              valid:
+                summary: Valid registration
+                value:
+                  name: John Doe
+                  email: john@example.com
+                  password: securepassword123
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRead'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: USER_EMAIL_EXISTS
+                message: A user with this email already exists
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: VALIDATION_ERROR
+                message: Password must be at least 8 characters
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: RATE_LIMIT_EXCEEDED
+                message: Too many requests. Please try again later.
+
+  /users/me:
+    delete:
+      operationId: delete_account
+      summary: Delete user account
+      description: |
+        Permanently delete the authenticated user's account.
+        Requires password confirmation.
+        Cascades to delete all refresh tokens and tasks.
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '204':
+          description: Account deleted successfully
+        '401':
+          description: Invalid credentials or token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                wrong_password:
+                  summary: Wrong password
+                  value:
+                    code: AUTH_INVALID_CREDENTIALS
+                    message: Invalid password
+                invalid_token:
+                  summary: Invalid token
+                  value:
+                    code: AUTH_TOKEN_INVALID
+                    message: Invalid or expired token
+
+  /auth/login:
+    post:
+      operationId: login
+      summary: User login
+      description: |
+        Authenticate user with email and password.
+        Returns access and refresh tokens on success.
+        Email comparison is case-insensitive.
+        Failed login attempts are tracked; account locks after 5 consecutive failures.
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: AUTH_INVALID_CREDENTIALS
+                message: Invalid email or password
+        '403':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: AUTH_ACCOUNT_LOCKED
+                message: Account is temporarily locked due to too many failed attempts
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      operationId: refresh_token
+      summary: Refresh access token
+      description: |
+        Exchange a valid refresh token for new access and refresh tokens.
+        Implements token rotation: old refresh token is invalidated.
+        Blocked if account is locked.
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid, expired, or revoked token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                expired:
+                  summary: Token expired
+                  value:
+                    code: AUTH_TOKEN_EXPIRED
+                    message: Refresh token has expired
+                revoked:
+                  summary: Token revoked
+                  value:
+                    code: AUTH_TOKEN_REVOKED
+                    message: Refresh token has been revoked
+                invalid:
+                  summary: Token invalid
+                  value:
+                    code: AUTH_TOKEN_INVALID
+                    message: Invalid refresh token
+        '403':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: User logout
+      description: |
+        Revoke the current refresh token.
+        Requires the refresh token in the request body.
+      tags:
+        - auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Successfully logged out
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/password-reset/request:
+    post:
+      operationId: request_password_reset
+      summary: Request password reset
+      description: |
+        Request a password reset token.
+        Token is logged to console (no email in learning project).
+        Response is identical for registered and unregistered emails to prevent enumeration.
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '202':
+          description: Request accepted (regardless of email existence)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: If an account exists with this email, a reset token has been generated
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/password-reset/confirm:
+    post:
+      operationId: confirm_password_reset
+      summary: Confirm password reset
+      description: |
+        Set a new password using the reset token.
+        Token is single-use and expires after 1 hour.
+        All existing refresh tokens are revoked on success.
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Password has been reset successfully
+        '400':
+          description: Invalid, expired, or used token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: RESET_TOKEN_INVALID
+                message: Reset token is invalid, expired, or already used
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+
+  schemas:
+    UserCreate:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^[a-zA-Z\s]+$
+          description: User display name (letters and spaces only)
+          example: John Doe
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: User email address (normalized to lowercase)
+          example: john@example.com
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: User password (minimum 8 characters)
+          example: securepassword123
+
+    UserRead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: User display name
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: john@example.com
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp (UTC)
+          example: "2026-01-22T12:00:00Z"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: john@example.com
+        password:
+          type: string
+          description: User password
+          example: securepassword123
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token (15-minute expiry)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          description: Opaque refresh token (7-day expiry)
+          example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+        token_type:
+          type: string
+          default: Bearer
+          description: Token type for Authorization header
+          example: Bearer
+        expires_in:
+          type: integer
+          description: Access token expiry time in seconds
+          example: 900
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token to exchange
+          example: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address of the account
+          example: john@example.com
+
+    PasswordResetConfirm:
+      type: object
+      required:
+        - token
+        - new_password
+      properties:
+        token:
+          type: string
+          description: Password reset token received
+          example: abc123resettoken...
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: New password to set
+          example: newsecurepassword456
+
+    DeleteAccountRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          description: Current password for confirmation
+          example: securepassword123
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable message
+          example: Operation completed successfully
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - VALIDATION_ERROR
+            - USER_EMAIL_EXISTS
+            - USER_NOT_FOUND
+            - AUTH_INVALID_CREDENTIALS
+            - AUTH_ACCOUNT_LOCKED
+            - AUTH_TOKEN_EXPIRED
+            - AUTH_TOKEN_INVALID
+            - AUTH_TOKEN_REVOKED
+            - RESET_TOKEN_INVALID
+            - RATE_LIMIT_EXCEEDED
+          example: AUTH_INVALID_CREDENTIALS
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid email or password
