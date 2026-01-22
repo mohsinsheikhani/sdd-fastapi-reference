@@ -24,11 +24,11 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Initialize UV project with pyproject.toml and core dependencies
-- [ ] T002 [P] Create src/ directory structure per plan.md (models/, schemas/, services/, api/, middleware/, core/)
-- [ ] T003 [P] Create tests/ directory structure (conftest.py, unit/, integration/)
-- [ ] T004 [P] Configure .gitignore with Python, .env, and IDE patterns
-- [ ] T005 [P] Create .env.example with required environment variables (DATABASE_URL, SECRET_KEY, etc.)
+- [X] T001 Initialize UV project with pyproject.toml and core dependencies
+- [X] T002 [P] Create src/ directory structure per plan.md (models/, schemas/, services/, api/, middleware/, core/)
+- [X] T003 [P] Create tests/ directory structure (conftest.py, unit/, integration/)
+- [X] T004 [P] Configure .gitignore with Python, .env, and IDE patterns
+- [X] T005 [P] Create .env.example with required environment variables (DATABASE_URL, SECRET_KEY, etc.)
 
 ### ✅ Checkpoint 1: Setup Complete
 
@@ -43,9 +43,9 @@ test -f .env.example                 # .env.example exists
 ```
 
 **Exit Criteria**:
-- [ ] Project structure matches plan.md
-- [ ] UV can resolve and install all dependencies
-- [ ] .env.example contains all required variables from quickstart.md
+- [X] Project structure matches plan.md
+- [X] UV can resolve and install all dependencies
+- [X] .env.example contains all required variables from quickstart.md
 
 ---
 
@@ -55,17 +55,17 @@ test -f .env.example                 # .env.example exists
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Implement Settings class with pydantic-settings in src/config.py
-- [ ] T007 Implement database engine and session dependency in src/database.py
-- [ ] T008 [P] Create base exception classes in src/core/exceptions.py (UserExistsError, InvalidCredentialsError, AccountLockedError, TokenExpiredError, TokenInvalidError, TokenRevokedError, ResetTokenInvalidError, RateLimitError)
-- [ ] T009 [P] Create ErrorResponse schema in src/schemas/error.py
-- [ ] T010 Implement global exception handlers for custom exceptions in src/main.py
-- [ ] T011 [P] Implement password hashing functions (hash_password, verify_password) using Argon2id in src/core/security.py
-- [ ] T012 [P] Implement token hashing function (hash_token) using SHA-256 in src/core/security.py
-- [ ] T013 Implement RateLimiter class (5 req/min/IP sliding window) in src/middleware/rate_limit.py
-- [ ] T014 Create FastAPI app skeleton with versioned router in src/main.py
-- [ ] T015 Create v1 router aggregator in src/api/v1/router.py
-- [ ] T016 Setup test fixtures (session, client) in tests/conftest.py
+- [X] T006 Implement Settings class with pydantic-settings in src/config.py
+- [X] T007 Implement database engine and session dependency in src/database.py
+- [X] T008 [P] Create base exception classes in src/core/exceptions.py (UserExistsError, InvalidCredentialsError, AccountLockedError, TokenExpiredError, TokenInvalidError, TokenRevokedError, ResetTokenInvalidError, RateLimitError)
+- [X] T009 [P] Create ErrorResponse schema in src/schemas/error.py
+- [X] T010 Implement global exception handlers for custom exceptions in src/main.py
+- [X] T011 [P] Implement password hashing functions (hash_password, verify_password) using Argon2id in src/core/security.py
+- [X] T012 [P] Implement token hashing function (hash_token) using SHA-256 in src/core/security.py
+- [X] T013 Implement RateLimiter class (5 req/min/IP sliding window) in src/middleware/rate_limit.py
+- [X] T014 Create FastAPI app skeleton with versioned router in src/main.py
+- [X] T015 Create v1 router aggregator in src/api/v1/router.py
+- [X] T016 Setup test fixtures (session, client) in tests/conftest.py
 
 ### ✅ Checkpoint 2: Foundation Ready
 
@@ -82,13 +82,13 @@ pkill -f uvicorn                                                         # Clean
 ```
 
 **Exit Criteria**:
-- [ ] FastAPI server starts without errors
-- [ ] `/docs` endpoint shows OpenAPI documentation
-- [ ] Settings load from environment variables
-- [ ] Database session can be created
-- [ ] All custom exceptions are defined and importable
-- [ ] Password hashing returns valid Argon2id hashes
-- [ ] Test fixtures work with pytest
+- [X] FastAPI server starts without errors
+- [X] `/docs` endpoint shows OpenAPI documentation
+- [X] Settings load from environment variables
+- [X] Database session can be created
+- [X] All custom exceptions are defined and importable
+- [X] Password hashing returns valid Argon2id hashes
+- [X] Test fixtures work with pytest
 
 **Gate**: User story implementation may now begin
 
@@ -104,21 +104,21 @@ pkill -f uvicorn                                                         # Clean
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [P] [US1] Integration test for valid registration (201) in tests/integration/test_registration.py
-- [ ] T018 [P] [US1] Integration test for duplicate email (409) in tests/integration/test_registration.py
-- [ ] T019 [P] [US1] Integration test for short password (422) in tests/integration/test_registration.py
-- [ ] T020 [P] [US1] Integration test for invalid name (empty, >100 chars, invalid chars) (422) in tests/integration/test_registration.py
-- [ ] T021 [P] [US1] Integration test for rate limiting (429) in tests/integration/test_registration.py
+- [X] T017 [P] [US1] Integration test for valid registration (201) in tests/integration/test_registration.py
+- [X] T018 [P] [US1] Integration test for duplicate email (409) in tests/integration/test_registration.py
+- [X] T019 [P] [US1] Integration test for short password (422) in tests/integration/test_registration.py
+- [X] T020 [P] [US1] Integration test for invalid name (empty, >100 chars, invalid chars) (422) in tests/integration/test_registration.py
+- [X] T021 [P] [US1] Integration test for rate limiting (429) in tests/integration/test_registration.py
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Create User model with all fields per data-model.md in src/models/user.py
-- [ ] T023 [P] [US1] Create UserCreate schema (name, email, password validation) in src/schemas/user.py
-- [ ] T024 [P] [US1] Create UserRead schema (id, name, email, created_at) in src/schemas/user.py
-- [ ] T025 [US1] Implement create_user function in src/services/user_service.py (hash password, normalize email, check duplicate)
-- [ ] T026 [US1] Implement POST /users endpoint in src/api/v1/users.py (rate limited)
-- [ ] T027 [US1] Wire users router to v1 router in src/api/v1/router.py
-- [ ] T028 [US1] Run registration tests to verify all scenarios pass
+- [X] T022 [P] [US1] Create User model with all fields per data-model.md in src/models/user.py
+- [X] T023 [P] [US1] Create UserCreate schema (name, email, password validation) in src/schemas/user.py
+- [X] T024 [P] [US1] Create UserRead schema (id, name, email, created_at) in src/schemas/user.py
+- [X] T025 [US1] Implement create_user function in src/services/user_service.py (hash password, normalize email, check duplicate)
+- [X] T026 [US1] Implement POST /users endpoint in src/api/v1/users.py (rate limited)
+- [X] T027 [US1] Wire users router to v1 router in src/api/v1/router.py
+- [X] T028 [US1] Run registration tests to verify all scenarios pass
 
 ### ✅ Checkpoint 3: Registration Functional
 
@@ -141,12 +141,12 @@ curl -X POST http://localhost:8000/api/v1/users \
 ```
 
 **Exit Criteria**:
-- [ ] All 5 registration tests pass (T017-T021)
-- [ ] POST /api/v1/users returns 201 with valid input
-- [ ] Duplicate email returns 409 USER_EMAIL_EXISTS
-- [ ] Invalid password returns 422 VALIDATION_ERROR
-- [ ] Invalid name returns 422 VALIDATION_ERROR
-- [ ] Rate limiting returns 429 after 5 requests/minute
+- [X] All 5 registration tests pass (T017-T021)
+- [X] POST /api/v1/users returns 201 with valid input
+- [X] Duplicate email returns 409 USER_EMAIL_EXISTS
+- [X] Invalid password returns 422 VALIDATION_ERROR
+- [X] Invalid name returns 422 VALIDATION_ERROR
+- [X] Rate limiting returns 429 after 5 requests/minute
 
 **Deliverable**: Users can create accounts (MVP v0.1)
 
@@ -162,26 +162,26 @@ curl -X POST http://localhost:8000/api/v1/users \
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T029 [P] [US2] Integration test for valid login (200) with tokens in tests/integration/test_login.py
-- [ ] T030 [P] [US2] Integration test for invalid credentials (401) in tests/integration/test_login.py
-- [ ] T031 [P] [US2] Integration test for account lockout after 5 failures (403) in tests/integration/test_login.py
-- [ ] T032 [P] [US2] Integration test for auto-unlock after 15 minutes in tests/integration/test_login.py
-- [ ] T033 [P] [US2] Integration test for case-insensitive email in tests/integration/test_login.py
-- [ ] T034 [P] [US2] Integration test for failed counter reset on success in tests/integration/test_login.py
-- [ ] T035 [P] [US2] Integration test for all tokens revoked on lockout in tests/integration/test_login.py
+- [X] T029 [P] [US2] Integration test for valid login (200) with tokens in tests/integration/test_login.py
+- [X] T030 [P] [US2] Integration test for invalid credentials (401) in tests/integration/test_login.py
+- [X] T031 [P] [US2] Integration test for account lockout after 5 failures (403) in tests/integration/test_login.py
+- [X] T032 [P] [US2] Integration test for auto-unlock after 15 minutes in tests/integration/test_login.py
+- [X] T033 [P] [US2] Integration test for case-insensitive email in tests/integration/test_login.py
+- [X] T034 [P] [US2] Integration test for failed counter reset on success in tests/integration/test_login.py
+- [X] T035 [P] [US2] Integration test for all tokens revoked on lockout in tests/integration/test_login.py
 
 ### Implementation for User Story 2
 
-- [ ] T036 [P] [US2] Create RefreshToken model with all fields per data-model.md in src/models/token.py
-- [ ] T037 [P] [US2] Create LoginRequest schema in src/schemas/auth.py
-- [ ] T038 [P] [US2] Create TokenResponse schema in src/schemas/auth.py
-- [ ] T039 [US2] Implement JWT access token creation (create_access_token) in src/services/token_service.py
-- [ ] T040 [US2] Implement refresh token generation (generate_refresh_token, store hashed) in src/services/token_service.py
-- [ ] T041 [US2] Implement revoke_all_user_tokens function in src/services/token_service.py
-- [ ] T042 [US2] Implement authenticate_user function in src/services/auth_service.py (check lockout, verify password, track failures, reset counter)
-- [ ] T043 [US2] Implement POST /auth/login endpoint in src/api/v1/auth.py (rate limited)
-- [ ] T044 [US2] Wire auth router to v1 router in src/api/v1/router.py
-- [ ] T045 [US2] Run login tests to verify all scenarios pass
+- [X] T036 [P] [US2] Create RefreshToken model with all fields per data-model.md in src/models/token.py
+- [X] T037 [P] [US2] Create LoginRequest schema in src/schemas/auth.py
+- [X] T038 [P] [US2] Create TokenResponse schema in src/schemas/auth.py
+- [X] T039 [US2] Implement JWT access token creation (create_access_token) in src/services/token_service.py
+- [X] T040 [US2] Implement refresh token generation (generate_refresh_token, store hashed) in src/services/token_service.py
+- [X] T041 [US2] Implement revoke_all_user_tokens function in src/services/token_service.py
+- [X] T042 [US2] Implement authenticate_user function in src/services/auth_service.py (check lockout, verify password, track failures, reset counter)
+- [X] T043 [US2] Implement POST /auth/login endpoint in src/api/v1/auth.py (rate limited)
+- [X] T044 [US2] Wire auth router to v1 router in src/api/v1/router.py
+- [X] T045 [US2] Run login tests to verify all scenarios pass
 
 ### ✅ Checkpoint 4: Login Functional (MVP Complete)
 
@@ -208,13 +208,13 @@ uv run python -c "from jose import jwt; print(jwt.get_unverified_claims('ACCESS_
 ```
 
 **Exit Criteria**:
-- [ ] All 7 login tests pass (T029-T035)
-- [ ] POST /api/v1/auth/login returns 200 with tokens on valid credentials
-- [ ] Invalid credentials return 401 AUTH_INVALID_CREDENTIALS
-- [ ] Account locks after 5 failed attempts with 403 AUTH_ACCOUNT_LOCKED
-- [ ] Locked account unlocks after 15 minutes
-- [ ] Email comparison is case-insensitive
-- [ ] Failed counter resets on successful login
+- [X] All 7 login tests pass (T029-T035)
+- [X] POST /api/v1/auth/login returns 200 with tokens on valid credentials
+- [X] Invalid credentials return 401 AUTH_INVALID_CREDENTIALS
+- [X] Account locks after 5 failed attempts with 403 AUTH_ACCOUNT_LOCKED
+- [X] Locked account unlocks after 15 minutes
+- [X] Email comparison is case-insensitive
+- [X] Failed counter resets on successful login
 
 **Deliverable**: Users can register AND login (MVP v0.2 - Core Auth Complete)
 
@@ -232,19 +232,19 @@ uv run python -c "from jose import jwt; print(jwt.get_unverified_claims('ACCESS_
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T046 [P] [US3] Integration test for valid refresh (200) with rotation in tests/integration/test_token_refresh.py
-- [ ] T047 [P] [US3] Integration test for expired refresh token (401) in tests/integration/test_token_refresh.py
-- [ ] T048 [P] [US3] Integration test for revoked refresh token (401) in tests/integration/test_token_refresh.py
-- [ ] T049 [P] [US3] Integration test for already-rotated token (401) in tests/integration/test_token_refresh.py
-- [ ] T050 [P] [US3] Integration test for locked account blocking refresh (403) in tests/integration/test_token_refresh.py
+- [X] T046 [P] [US3] Integration test for valid refresh (200) with rotation in tests/integration/test_token_refresh.py
+- [X] T047 [P] [US3] Integration test for expired refresh token (401) in tests/integration/test_token_refresh.py
+- [X] T048 [P] [US3] Integration test for revoked refresh token (401) in tests/integration/test_token_refresh.py
+- [X] T049 [P] [US3] Integration test for already-rotated token (401) in tests/integration/test_token_refresh.py
+- [X] T050 [P] [US3] Integration test for locked account blocking refresh (403) in tests/integration/test_token_refresh.py
 
 ### Implementation for User Story 3
 
-- [ ] T051 [P] [US3] Create RefreshRequest schema in src/schemas/auth.py
-- [ ] T052 [US3] Implement validate_refresh_token function in src/services/token_service.py (check expired, revoked, lookup by hash)
-- [ ] T053 [US3] Implement rotate_refresh_token function in src/services/token_service.py (invalidate old, create new)
-- [ ] T054 [US3] Implement POST /auth/refresh endpoint in src/api/v1/auth.py
-- [ ] T055 [US3] Run token refresh tests to verify all scenarios pass
+- [X] T051 [P] [US3] Create RefreshRequest schema in src/schemas/auth.py
+- [X] T052 [US3] Implement validate_refresh_token function in src/services/token_service.py (check expired, revoked, lookup by hash)
+- [X] T053 [US3] Implement rotate_refresh_token function in src/services/token_service.py (invalidate old, create new)
+- [X] T054 [US3] Implement POST /auth/refresh endpoint in src/api/v1/auth.py
+- [X] T055 [US3] Run token refresh tests to verify all scenarios pass
 
 ### ✅ Checkpoint 5: Token Refresh Functional
 
@@ -274,12 +274,12 @@ curl -X POST http://localhost:8000/api/v1/auth/refresh \
 ```
 
 **Exit Criteria**:
-- [ ] All 5 token refresh tests pass (T046-T050)
-- [ ] POST /api/v1/auth/refresh returns 200 with new tokens
-- [ ] Old refresh token is invalidated after use (rotation)
-- [ ] Expired tokens return 401 AUTH_TOKEN_EXPIRED
-- [ ] Revoked tokens return 401 AUTH_TOKEN_REVOKED
-- [ ] Locked accounts cannot refresh (403 AUTH_ACCOUNT_LOCKED)
+- [X] All 5 token refresh tests pass (T046-T050)
+- [X] POST /api/v1/auth/refresh returns 200 with new tokens
+- [X] Old refresh token is invalidated after use (rotation)
+- [X] Expired tokens return 401 AUTH_TOKEN_EXPIRED
+- [X] Revoked tokens return 401 AUTH_TOKEN_REVOKED
+- [X] Locked accounts cannot refresh (403 AUTH_ACCOUNT_LOCKED)
 
 **Deliverable**: Users can extend sessions without re-login (v0.3 partial)
 
@@ -295,16 +295,16 @@ curl -X POST http://localhost:8000/api/v1/auth/refresh \
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T056 [P] [US4] Integration test for valid logout (200) in tests/integration/test_logout.py
-- [ ] T057 [P] [US4] Integration test for revoked token rejected on reuse (401) in tests/integration/test_logout.py
+- [X] T056 [P] [US4] Integration test for valid logout (200) in tests/integration/test_logout.py
+- [X] T057 [P] [US4] Integration test for revoked token rejected on reuse (401) in tests/integration/test_logout.py
 
 ### Implementation for User Story 4
 
-- [ ] T058 [P] [US4] Create MessageResponse schema in src/schemas/auth.py
-- [ ] T059 [US4] Implement get_current_user dependency in src/api/deps.py (decode JWT, verify user exists, check lockout)
-- [ ] T060 [US4] Implement revoke_refresh_token function in src/services/token_service.py
-- [ ] T061 [US4] Implement POST /auth/logout endpoint in src/api/v1/auth.py (requires auth)
-- [ ] T062 [US4] Run logout tests to verify all scenarios pass
+- [X] T058 [P] [US4] Create MessageResponse schema in src/schemas/auth.py
+- [X] T059 [US4] Implement get_current_user dependency in src/api/deps.py (decode JWT, verify user exists, check lockout)
+- [X] T060 [US4] Implement revoke_refresh_token function in src/services/token_service.py
+- [X] T061 [US4] Implement POST /auth/logout endpoint in src/api/v1/auth.py (requires auth)
+- [X] T062 [US4] Run logout tests to verify all scenarios pass
 
 ### ✅ Checkpoint 6: Logout Functional (Session Management Complete)
 
@@ -336,10 +336,10 @@ curl -X POST http://localhost:8000/api/v1/auth/refresh \
 ```
 
 **Exit Criteria**:
-- [ ] All 2 logout tests pass (T056-T057)
-- [ ] POST /api/v1/auth/logout returns 200 with success message
-- [ ] Refresh token is revoked after logout
-- [ ] Revoked token cannot be used to refresh
+- [X] All 2 logout tests pass (T056-T057)
+- [X] POST /api/v1/auth/logout returns 200 with success message
+- [X] Refresh token is revoked after logout
+- [X] Revoked token cannot be used to refresh
 
 **Deliverable**: Full session management (v0.3 - Register, Login, Refresh, Logout)
 
@@ -355,24 +355,24 @@ curl -X POST http://localhost:8000/api/v1/auth/refresh \
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T063 [P] [US5] Integration test for password reset request (202) in tests/integration/test_password_reset.py
-- [ ] T064 [P] [US5] Integration test for identical response on unknown email (202) in tests/integration/test_password_reset.py
-- [ ] T065 [P] [US5] Integration test for valid reset confirmation (200) in tests/integration/test_password_reset.py
-- [ ] T066 [P] [US5] Integration test for expired reset token (400) in tests/integration/test_password_reset.py
-- [ ] T067 [P] [US5] Integration test for already-used reset token (400) in tests/integration/test_password_reset.py
-- [ ] T068 [P] [US5] Integration test for all refresh tokens revoked on password change in tests/integration/test_password_reset.py
+- [X] T063 [P] [US5] Integration test for password reset request (202) in tests/integration/test_password_reset.py
+- [X] T064 [P] [US5] Integration test for identical response on unknown email (202) in tests/integration/test_password_reset.py
+- [X] T065 [P] [US5] Integration test for valid reset confirmation (200) in tests/integration/test_password_reset.py
+- [X] T066 [P] [US5] Integration test for expired reset token (400) in tests/integration/test_password_reset.py
+- [X] T067 [P] [US5] Integration test for already-used reset token (400) in tests/integration/test_password_reset.py
+- [X] T068 [P] [US5] Integration test for all refresh tokens revoked on password change in tests/integration/test_password_reset.py
 
 ### Implementation for User Story 5
 
-- [ ] T069 [P] [US5] Create PasswordResetToken model with all fields per data-model.md in src/models/token.py
-- [ ] T070 [P] [US5] Create PasswordResetRequest schema in src/schemas/auth.py
-- [ ] T071 [P] [US5] Create PasswordResetConfirm schema in src/schemas/auth.py
-- [ ] T072 [US5] Implement generate_password_reset_token function in src/services/password_service.py (create token, hash, store, log to console)
-- [ ] T073 [US5] Implement validate_reset_token function in src/services/password_service.py (check expired, used)
-- [ ] T074 [US5] Implement reset_password function in src/services/password_service.py (update hash, mark token used, revoke all refresh tokens)
-- [ ] T075 [US5] Implement POST /auth/password-reset/request endpoint in src/api/v1/auth.py (rate limited)
-- [ ] T076 [US5] Implement POST /auth/password-reset/confirm endpoint in src/api/v1/auth.py
-- [ ] T077 [US5] Run password reset tests to verify all scenarios pass
+- [X] T069 [P] [US5] Create PasswordResetToken model with all fields per data-model.md in src/models/token.py
+- [X] T070 [P] [US5] Create PasswordResetRequest schema in src/schemas/auth.py
+- [X] T071 [P] [US5] Create PasswordResetConfirm schema in src/schemas/auth.py
+- [X] T072 [US5] Implement generate_password_reset_token function in src/services/password_service.py (create token, hash, store, log to console)
+- [X] T073 [US5] Implement validate_reset_token function in src/services/password_service.py (check expired, used)
+- [X] T074 [US5] Implement reset_password function in src/services/password_service.py (update hash, mark token used, revoke all refresh tokens)
+- [X] T075 [US5] Implement POST /auth/password-reset/request endpoint in src/api/v1/auth.py (rate limited)
+- [X] T076 [US5] Implement POST /auth/password-reset/confirm endpoint in src/api/v1/auth.py
+- [X] T077 [US5] Run password reset tests to verify all scenarios pass
 
 ### ✅ Checkpoint 7: Password Reset Functional
 
@@ -408,13 +408,13 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 ```
 
 **Exit Criteria**:
-- [ ] All 6 password reset tests pass (T063-T068)
-- [ ] POST /api/v1/auth/password-reset/request returns 202 (always, to prevent enumeration)
-- [ ] Reset token is logged to console
-- [ ] POST /api/v1/auth/password-reset/confirm returns 200 with valid token
-- [ ] Password is updated and user can login with new password
-- [ ] All existing refresh tokens are revoked on password change
-- [ ] Expired/used tokens return 400 RESET_TOKEN_INVALID
+- [X] All 6 password reset tests pass (T063-T068)
+- [X] POST /api/v1/auth/password-reset/request returns 202 (always, to prevent enumeration)
+- [X] Reset token is logged to console
+- [X] POST /api/v1/auth/password-reset/confirm returns 200 with valid token
+- [X] Password is updated and user can login with new password
+- [X] All existing refresh tokens are revoked on password change
+- [X] Expired/used tokens return 400 RESET_TOKEN_INVALID
 
 **Deliverable**: Account recovery capability (v0.4)
 
